@@ -59,3 +59,47 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## -- Fortify-Integration --
+
+#### Step 1: Installation: 
+- To get started, install Fortify using Composer:
+
+```
+composer require laravel/fortify
+```
+
+#### Step 2-0: Next, publish Fortify's resources:
+
+```php artisan vendor:publish --provider="Laravel\Fortify\FortifyServiceProvider"```
+- This command will publish Fortify's actions to your `app/Actions` directory. This directory will be created if it does not exist. In addition, Fortify's configuration file and migrations will be published.
+#### Step 2-1:The Fortify Service Provider
+
+- The `vendor:publish` command discussed above will also publish the `app/Providers/FortifyServiceProvider` file. You should ensure this file is registered within the providers array of your app configuration file.
+
+- This service provider registers the actions that Fortify published, instructing Fortify to use them when their respective tasks are executed by Fortify
+
+#### Step 3: Create Database at phpMyAdmin named `laravel-8-authentication-with-bootstrap-and-fortify` and setup .env file in your root directory 
+
+- Database
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=laravel-8-authentication-with-bootstrap-and-fortify
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+#### Step 4: Customize at AppServiceProvider.php 
+```
+Customize at AppServiceProvider.php in project\app\Providers
+```
+
+#### Step 5: Migrate Database
+- Now you need to run default migration of laravel by the following command:
+```
+php artisan migrate
+```
+
+## Follow This Instruction:  https://github.com/laravel/fortify
