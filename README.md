@@ -103,3 +103,139 @@ php artisan migrate
 ```
 
 ## Follow This Instruction:  https://github.com/laravel/fortify
+
+
+## -- Fortify-Integration 02 - Fortify views for Bootstrap 4
+#### Install bootstrap
+
+- We will be also be installing jquery and popper.js because bootstrap requires these packages
+```
+npm i
+npm install --save bootstrap jquery popper.js cross-env
+```
+- Import packages in the resources/js/bootstrap.js file
+```
+try {
+    window.Popper = require('popper.js').default;
+    window.$ = window.jQuery = require('jquery');
+
+    require('bootstrap');
+} catch (e) {
+}
+```
+- Delete resources/css folder and create app.scss file in resources/sass
+```
+rm -rf resources/css
+mkdir resources/sass
+touch resources/sass/app.scss
+```
+- Import packages in the `resources/sass/app.scss` file
+```
+// bootstrap
+@import "~bootstrap/scss/bootstrap";
+```
+#### Next update webpack.mix.js
+```
+mix.js('resources/js/app.js', 'public/js')
+    .sass('resources/sass/app.scss', 'public/css');
+```
+Compile assets
+
+`npm run dev`
+
+#### Add Auth Views
+
+- In your `resources/views` folder create two folders auth and layouts
+
+`mkdir resources/views/layouts resources/views/auth`
+
+- Next create the following views
+```
+touch resources/views/layouts/app.blade.php
+touch resources/views/auth/login.blade.php
+touch resources/views/auth/register.blade.php
+touch resources/views/auth/forgot-password.blade.php
+touch resources/views/auth/reset-password.blade.php
+touch resources/views/auth/verify-email.blade.php
+touch resources/views/home.blade.php
+```
+#### Update Fortify Provider
+
+- Next we will need to update boot method in `app/Providers/FortifyServiceProvider`. This is to tell fortify how to authenticate the user and where the views we created early are located.
+```
+public function boot()
+{
+    Fortify::loginView(function () {
+        return view('auth.login');
+    });
+
+    Fortify::authenticateUsing(function (Request $request) {
+        $user = User::where('email', $request->email)->first();
+
+        if ($user &&
+            Hash::check($request->password, $user->password)) {
+            return $user;
+        }
+    });
+
+    Fortify::registerView(function () {
+        return view('auth.register');
+    });
+
+    Fortify::requestPasswordResetLinkView(function () {
+        return view('auth.forgot-password');
+    });
+
+    Fortify::resetPasswordView(function ($request) {
+        return view('auth.reset-password', ['request' => $request]);
+    });
+
+    Fortify::verifyEmailView(function () {
+        return view('auth.verify-email');
+    });
+
+    // ...
+}
+```
+- Next register FortifyServiceProvider by adding it to the providers array in `config\app.php` `App\Providers\FortifyServiceProvider::class,`.
+
+- In your app/Models/User.php file ensure the class implements MustVerifyEmail
+```
+<?php
+
+namespace App\Models;
+
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable implements MustVerifyEmail
+{
+    use HasFactory, Notifiable;
+
+    // ...
+}
+```
+- We also need to tell fortify that we want to enable email verfication. In the `app/fortify.php` file uncomment the line that says `Features::emailVerification()`.
+
+- If you want to test email verification you will need to update your email variables in `.env`. You can use a free mail server mailtrap.io
+```
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=
+MAIL_PASSWORD=
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=info@lara8auth.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+- Finally we will add the home route to the routes/web.php file
+```
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::view('home', 'home')->name('home');
+});
+```
+- We have completed our setup. You should have a working authentication system using laravel fortify and bootstrap.
+
+## Follow This Instruction: https://dev.to/jasminetracey/laravel-8-with-bootstrap-livewire-and-fortify-5d33
